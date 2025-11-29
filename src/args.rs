@@ -13,4 +13,7 @@ pub enum Commands{
     Search{
         query: String,
     },
+    Get {
+        package: String,
+    },
 }
