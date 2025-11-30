@@ -1,5 +1,5 @@
 use git2::build::RepoBuilder;
-use git2::{FetchOptions, Progress, RemoteCallbacks};
+use git2::{FetchOptions, RemoteCallbacks};
 use std::path::Path;
 
 /// Clones a repo from `url` to `path` with a progress reporter
