@@ -4,6 +4,7 @@ mod core;
 mod pacman;
 mod git_ops;
 mod parser;
+mod dependency;
 
 use anyhow::Result;
 use args::{Cli, Commands};
@@ -73,15 +74,32 @@ async fn main() -> Result<()> {
                 return Ok(());
             }
 
-            // CALL THE NEW FUNCTION
             match clone_repo(&aur_url, path) {
                 Ok(_) => {
                     println!(":: Package ready in {}", cache_dir);
                     match parse_srcinfo(path){
                         Ok(meta) => {
                             println!(":: Package: {} v{}", meta.pkgbase, meta.version);
-                            println!(":: Dependencies: {:?}", meta.depends);
-                            println!(":: Build Deps: {:?}", meta.make_depends);
+
+                            let mut repo_deps: Vec<String> = Vec::new();
+                            let mut aur_deps: Vec<String> = Vec::new();
+
+                            println!(":: Resolving dependencies...");
+
+                            for dep in &meta.depends{
+                                let clean_name = dependency::clean_dependency(dep);
+
+                                match dependency::check_origin(&clean_name) {
+                                    dependency::PackageOrigin::Repo => repo_deps.push(clean_name),
+                                    dependency::PackageOrigin::Aur => aur_deps.push(clean_name),
+                                }
+                            }
+
+                            if !repo_deps.is_empty() {println!(":: [PACMAN] These can be installed instantly: {:?}", repo_deps);
+                            }
+                            if !aur_deps.is_empty() {
+                                println!(":: [AUR]    These need to be built: {:?}", aur_deps);
+                            }
                         }
                         Err(e) => eprintln!("!! Failed to read .SRCINFO: {}", e),
                     }
